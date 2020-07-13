@@ -58,9 +58,17 @@ Usage: callback_tool [options...]
 
 ###### 启动调试
 
+宿主机运行程序
+
 ```shell
 # http://192.168.1.168:8888/api/debugging/callback
 callback_tool_unix -h 192.168.1.168 -p 8888 -r /api/debugging/callback
+```
+
+`Docker` 容器运行
+
+```shell
+docker run -itd -p 8888:80 --name callback_tool alicfeng/callback_tool:1.0.0
 ```
 
 > 此时回调工具服务就启动了，处于就绪状态。
@@ -74,6 +82,8 @@ callback_tool_unix -h 192.168.1.168 -p 8888 -r /api/debugging/callback
 -rw-rw-r-- 1 alicfeng alicfeng   90 7月  13 15:16 client_20200713_151344_1594624424551275888.ini
 -rw-rw-r-- 1 alicfeng alicfeng   18 7月  13 15:13 package_20200713_151344_1594624424551275888.json
 ```
+
+
 
 
 
