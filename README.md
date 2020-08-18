@@ -53,6 +53,7 @@ Usage: callback_tool [options...]
 --help  This help text
 -h      host.     default 127.0.0.1
 -p      port.     default 80
+-o      output.   default .
 -r      route.    default /api/callback
 ```
 
@@ -68,7 +69,9 @@ callback_tool_unix -h 192.168.1.168 -p 8888 -r /api/debugging/callback
 `Docker` 容器运行
 
 ```shell
-docker run -itd -p 8888:80 --name callback_tool alicfeng/callback_tool:1.0.0
+docker run -itd -p 8888:80 -v /var/log/callback_tool:/var/log/callback_tool --name callback_tool alicfeng/callback_tool:latest
+# OR
+docker-compose up -d
 ```
 
 > 此时回调工具服务就启动了，处于就绪状态。

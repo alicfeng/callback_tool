@@ -1,0 +1,10 @@
+version: "3"
+services:
+  callback_tool:
+    container_name: callback_tool
+    image: alicfeng/callback_tool:latest
+    volumes:
+      - ${CALLBACK_TOOL_DIRECTORY:-/var/log/callback_tool}:/var/log/callback_tool
+    ports:
+      - ${INFERENCE_PLATFORM_HTTP_PORT:-8890}:80
+    restart: always

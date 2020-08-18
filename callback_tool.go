@@ -1,7 +1,7 @@
 /*
 Author   :    AlicFeng
 Email    :    a@samego.com
-Gitlab   :    http://git.extremevision.com.cn/yumen/callback_tool.git
+Github   :    https://github.com/alicfeng/callback_tool.git
 */
 
 package main
@@ -25,6 +25,7 @@ var (
 	host    = flag.String("h", "127.0.0.1", "host(127.0.0.1)")
 	port    = flag.Int("p", 80, "port(80)")
 	route   = flag.String("r", "/api/callback", "route path(/api/callback)")
+	output  = flag.String("o", ".", "output directory")
 	version = flag.Bool("v", false, "show version and exit")
 )
 
@@ -38,6 +39,7 @@ func init() {
 			"--help  This help text" + "\n" +
 			"-h      host.     default 127.0.0.1" + "\n" +
 			"-p      port.     default 80" + "\n" +
+			"-o      output.   default ." + "\n" +
 			"-r      route.    default /api/callback" +
 			"")
 		os.Exit(0)
@@ -64,10 +66,15 @@ func callbackHandle(rw http.ResponseWriter, request *http.Request) {
 	// 1.创建报文文件 including package as well as client
 	var packageFile, clientFile *os.File
 	t := time.Now()
-	prefix := t.Format("20060102_150405") + "_" + strconv.FormatInt(t.UnixNano(), 10)
+	date := t.Format("20060102")
+	directory := *output + "/" + date
+	prefix := date + "/" + t.Format("15.04.05") + "_" + strconv.FormatInt(t.UnixNano(), 10)
+	if _, err := os.Stat(directory); err != nil {
+		_ = os.MkdirAll(directory, 0777)
+	}
 
 	// 1.1记录请求报文信息
-	packageOutput := "package_" + prefix + ".json"
+	packageOutput := *output + "/" + prefix + "_package.json"
 	packageFile, err := os.Create(packageOutput)
 	if nil != err {
 		panic(err)
@@ -78,7 +85,7 @@ func callbackHandle(rw http.ResponseWriter, request *http.Request) {
 	_, _ = io.WriteString(packageFile, string(body))
 
 	// 1.2记录客户端信息
-	clientOutput := "client_" + prefix + ".ini"
+	clientOutput := *output + "/" + prefix + "_client.ini"
 	ip, port, err := net.SplitHostPort(request.RemoteAddr)
 	clientFile, err = os.Create(clientOutput)
 	if nil != err {
