@@ -29,6 +29,20 @@ var (
 	version = flag.Bool("v", false, "show version and exit")
 )
 
+const (
+	DirectorySeparator = "/"
+	FileSignPackage    = "_package.json"
+	FileSignClient     = "_client.ini"
+)
+
+type reqStructure struct {
+	ip     string
+	port   int
+	url    string
+	method string
+	body   string
+}
+
 /**
 init func
 */
@@ -63,41 +77,59 @@ func main() {
 接收报文并写进文件Handle
 */
 func callbackHandle(rw http.ResponseWriter, request *http.Request) {
+	// 1.参数处理
+	body, _ := ioutil.ReadAll(request.Body)
+	defer request.Body.Close()
+	ip, port, _ := net.SplitHostPort(request.RemoteAddr)
+	req := reqStructure{}
+	req.port, _ = strconv.Atoi(port)
+	req.ip = ip
+	req.body = string(body)
+	req.url = request.URL.Host + request.URL.Path
+
+	// 2.异步处理回调业务
+	go callbackService(req)
+
+	// 3.响应客户端请求
+	_, _ = io.WriteString(rw, "successful")
+}
+
+/**
+接收报文并写进文件Service
+*/
+func callbackService(request reqStructure) {
 	// 1.创建报文文件 including package as well as client
 	var packageFile, clientFile *os.File
 	t := time.Now()
 	date := t.Format("20060102")
-	directory := *output + "/" + date
-	prefix := date + "/" + t.Format("15.04.05") + "_" + strconv.FormatInt(t.UnixNano(), 10)
+	directory := *output + DirectorySeparator + date
+	prefix := date + DirectorySeparator + t.Format("15.04.05") + "_" + strconv.FormatInt(t.UnixNano(), 10)
 	if _, err := os.Stat(directory); err != nil {
 		_ = os.MkdirAll(directory, 0777)
 	}
 
-	// 1.1记录请求报文信息
-	packageOutput := *output + "/" + prefix + "_package.json"
-	packageFile, err := os.Create(packageOutput)
+	// 2.记录请求报文信息
+	packageFile, err := os.Create(*output + DirectorySeparator + prefix + FileSignPackage)
+	if nil != err {
+		fmt.Println("starting ???")
+		panic(err)
+		return
+	}
+	defer packageFile.Close()
+
+	_, _ = io.WriteString(packageFile, request.body)
+
+	// 3.记录客户端信息
+	clientFile, err = os.Create(*output + DirectorySeparator + prefix + FileSignClient)
 	if nil != err {
 		panic(err)
 		return
 	}
+	defer clientFile.Close()
 
-	body, _ := ioutil.ReadAll(request.Body)
-	_, _ = io.WriteString(packageFile, string(body))
-
-	// 1.2记录客户端信息
-	clientOutput := *output + "/" + prefix + "_client.ini"
-	ip, port, err := net.SplitHostPort(request.RemoteAddr)
-	clientFile, err = os.Create(clientOutput)
-	if nil != err {
-		panic(err)
-		return
-	}
 	_, _ = io.WriteString(clientFile, "time="+prefix+
-		"\nip = "+ip+
-		"\nport = "+port+
-		"\nmethod = "+request.Method+
-		"\nurl = "+request.URL.Host+request.URL.Path)
-
-	// 2.响应客户端请求
-	_, _ = io.WriteString(rw, "successful")
+		"\nip = "+request.ip+
+		"\nport = "+strconv.Itoa(request.port)+
+		"\nmethod = "+request.method+
+		"\nurl = "+request.url)
 }
