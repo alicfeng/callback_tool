@@ -69,7 +69,12 @@ callback_tool_unix -h 192.168.1.168 -p 8888 -r /api/debugging/callback
 `Docker` 容器运行
 
 ```shell
-docker run -itd -p 8888:80 -v /var/log/callback_tool:/var/log/callback_tool --name callback_tool alicfeng/callback_tool:latest
+docker run -itd \
+-p 8888:80 \
+-v /var/log/callback_tool:/var/log/callback_tool \
+--name callback_tool \
+--restart always \
+alicfeng/callback_tool:latest
 # OR
 docker-compose up -d
 ```
